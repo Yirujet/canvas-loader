@@ -1,5 +1,5 @@
 {
-  "name": "canvas-loader",
+  "name": "canvas-loaders",
   "version": "1.0.0",
   "description": "Parse the. canvas file into JavaScript",
   "main": "index.js",
