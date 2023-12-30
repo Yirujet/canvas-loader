@@ -58,14 +58,21 @@ module.exports = function(source) {
     const root = {}
     const elList = []
     nodeList.forEach(node => createTree(root, node))
-
+    let scriptImport = ''
     if (root.children) {
         const rootNodeKeys = Reflect.ownKeys(root.children)
         const canvasNodeIndex = rootNodeKeys.findIndex(item => item.description === 'canvas')
         const scriptNodeIndex = rootNodeKeys.findIndex(item => item.description === 'script')
         const canvasNode = root.children[rootNodeKeys[canvasNodeIndex]]
         const scriptNode = root.children[rootNodeKeys[scriptNodeIndex]]
-        const scriptObj = (evalFn(scriptNode.content))()
+        const scriptContent = scriptNode.content.trim()
+        let scriptObj
+        if (scriptContent.startsWith('import')) {
+            scriptImport = scriptContent.slice(0, scriptContent.indexOf('{') - 1)
+            scriptObj = (evalFn(scriptContent.slice(scriptContent.indexOf('{'))))()
+        } else {
+            scriptObj = (evalFn(scriptContent))()
+        }
         const collectCanvasElList = node => {
             Reflect.ownKeys(canvasNode.children).forEach(elName => {
                 const elProps = {}
@@ -118,6 +125,7 @@ module.exports = function(source) {
                 }
                 const obj2Str = target => {
                     let str = ''
+                    let isAsync = false
                     for (let item in target) {
                         if (Object.prototype.toString.call(target[item]) === '[object Object]') {
                             str += `${item}:{${obj2Str(target[item])}},`
@@ -134,9 +142,10 @@ module.exports = function(source) {
                             } else {
                                 fnBody = target[item].toString().slice(target[item].toString().indexOf('{') + 1, target[item].toString().indexOf('}'))
                                 fnArgs = target[item].toString().replace(fnBody, '').trim()
+                                isAsync = fnArgs.startsWith('async')
                                 fnArgs = fnArgs.slice(fnArgs.indexOf('(') + 1, fnArgs.indexOf(')'))
                             }
-                            str += `${item}:function(${fnArgs}) {${fnBody}},`
+                            str += `${item}:${isAsync ? 'async ' : ''}function(${fnArgs}) {${fnBody}},`
                         } else {
                             str += `${item}:"${target[item]}",`
                         }
@@ -149,6 +158,7 @@ module.exports = function(source) {
         collectCanvasElList(canvasNode)
     }
     const result = `
+        ${ scriptImport }
         export default {
             render: h => [${elList}]
         }

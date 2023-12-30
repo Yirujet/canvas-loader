@@ -1,6 +1,6 @@
 {
   "name": "canvas-loaders",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Parse the. canvas file into JavaScript",
   "main": "index.js",
   "scripts": {
