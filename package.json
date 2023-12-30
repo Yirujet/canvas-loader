@@ -1,0 +1,23 @@
+{
+  "name": "canvas-loader",
+  "version": "1.0.0",
+  "description": "Parse the. canvas file into JavaScript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Yirujet/canvas-loader.git"
+  },
+  "keywords": [
+    ".canvas",
+    "javascript"
+  ],
+  "author": "yirujet",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Yirujet/canvas-loader/issues"
+  },
+  "homepage": "https://github.com/Yirujet/canvas-loader#readme"
+}
