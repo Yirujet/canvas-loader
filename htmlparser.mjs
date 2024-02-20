@@ -82,13 +82,14 @@
 // Regular Expressions for parsing tags and attributes
 /**
  * startTag
- * /^<([-A-Za-z0-9_]+)((?:\s+@?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/
+ * /^<([-A-Za-z0-9_]+)((?:\s+@?\*?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/
  * @1. <: 匹配一个左尖括号<
  * @2. ([-A-Za-z0-9_]+): 匹配至少一个数字或字母或下划线_或连接符-
- * @3. ((?:\s+@?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)
- *     \s+@?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+)): 匹配属性名称
+ * @3. ((?:\s+@?\*?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)
+ *     \s+@?\*?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+)): 匹配属性名称
  *     \s+: 匹配多个空白符
  *     @?: 匹配0或1个@
+ *     \*?: 匹配0或1个*
  *     [a-zA-Z_:]: 匹配一个字母或下划线_或冒号:
  *     [-a-zA-Z0-9_:.]*: 匹配任意个数字或字母或下划线_或连接符-或冒号:或点号.
  * 
@@ -118,9 +119,9 @@
 
 /**
  * attr
- * /([a-zA-Z_:@][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g
- * @1. ([a-zA-Z_:@][-a-zA-Z0-9_:.]*): 匹配属性名称
- *     [a-zA-Z_:@]: 匹配一个字母或下划线_或冒号:或@
+ * /([a-zA-Z_:@*][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g
+ * @1. ([a-zA-Z_:@*][-a-zA-Z0-9_:.]*): 匹配属性名称
+ *     [a-zA-Z_:@*]: 匹配一个字母或下划线_或冒号:或@或*
  *     [-a-zA-Z0-9_:.]*: 匹配任意个数字或字母或下划线_或连接符号-或冒号:或点号.
  * @2. (?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?
  *     \s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+))
@@ -136,30 +137,36 @@
  *     '((?:\\.|[^'])*)': 匹配一个单引号'，接着匹配任意个除点号跟单引号的任意字符
  *     ([^>\s]+): 匹配至少一个除右尖括号>跟空白符号的任意字符
  */
-var startTag = /^<([-A-Za-z0-9_]+)((?:\s+@?[a-zA-Z_:][-a-zA-Z0-9_:.]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/,
+
+var HTMLParser = function (html, handler) {
+    function makeMap(str) {
+        var obj = {}, items = str.split(",");
+        for (var i = 0; i < items.length; i++)
+            obj[items[i]] = true;
+        return obj;
+    }
+    var startTag = /^<([-A-Za-z0-9_]+)((?:\s+@?\*?[a-zA-Z_:@*$][-a-zA-Z0-9_:.$]*(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/,
     endTag = /^<\/([-A-Za-z0-9_]+)[^>]*>/,
-    attr = /([a-zA-Z_:@][-a-zA-Z0-9_:.]*)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g;
+    attr = /([a-zA-Z_:@*$][-a-zA-Z0-9_:.$]*)(?:\s*=\s*(?:(?:"((?:\\.|[^"])*)")|(?:'((?:\\.|[^'])*)')|([^>\s]+)))?/g;
 
-// Empty Elements - HTML 5
-var empty = makeMap("area,base,basefont,br,col,frame,hr,img,input,meta,param,embed,command,keygen,source,track,wbr");
+    // Empty Elements - HTML 5
+    var empty = makeMap("area,base,basefont,br,frame,hr,img,meta,param,embed,command,keygen,source,track,wbr");
 
-// Block Elements - HTML 5
-var block = makeMap("a,address,article,applet,aside,audio,blockquote,button,link,canvas,center,dd,del,dir,div,dl,dt,fieldset,figcaption,figure,footer,form,frameset,h1,h2,h3,h4,h5,h6,header,hgroup,hr,iframe,ins,isindex,li,map,menu,noframes,noscript,object,ol,output,p,pre,section,script,table,tbody,td,tfoot,th,thead,tr,ul,video,line");
+    // Block Elements - HTML 5
+    var block = makeMap("a,address,article,applet,aside,audio,blockquote,button,switch,progress,row,col,tag,rate,input,link,canvas,center,dd,del,dir,div,dl,dt,fieldset,figcaption,figure,footer,form,frameset,h1,h2,h3,h4,h5,h6,header,hgroup,hr,iframe,ins,isindex,li,map,menu,noframes,noscript,object,ol,output,p,pre,section,script,table,tbody,td,tfoot,th,thead,tr,ul,video,line");
 
-// Inline Elements - HTML 5
-var inline = makeMap("abbr,acronym,applet,b,basefont,bdo,big,br,button,cite,code,del,dfn,em,font,i,iframe,img,input,ins,kbd,label,map,object,q,s,samp,script,select,small,span,strike,strong,sub,sup,textarea,tt,u,var,path");
+    // Inline Elements - HTML 5
+    var inline = makeMap("abbr,acronym,applet,b,basefont,bdo,big,br,button,cite,code,del,dfn,em,font,i,iframe,img,input,ins,kbd,label,map,object,q,s,samp,script,select,small,span,strike,strong,sub,sup,textarea,tt,u,var,path");
 
-// Elements that you can, intentionally, leave open
-// (and which close themselves)
-var closeSelf = makeMap("colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,img,rect");
+    // Elements that you can, intentionally, leave open
+    // (and which close themselves)
+    var closeSelf = makeMap("colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr,img,rect");
 
-// Attributes that have their values filled in disabled="disabled"
-var fillAttrs = makeMap("checked,compact,declare,defer,disabled,ismap,multiple,nohref,noresize,noshade,nowrap,readonly,selected");
+    // Attributes that have their values filled in disabled="disabled"
+    var fillAttrs = makeMap("checked,compact,declare,defer,disabled,ismap,multiple,nohref,noresize,noshade,nowrap,readonly,selected,plain,round,clearable,closable,allowClear,allowHalf");
 
-// Special Elements (can contain anything)
-var special = makeMap("style,script");
-
-var HTMLParser = this.HTMLParser = function (html, handler) {
+    // Special Elements (can contain anything)
+    var special = makeMap("style,script");
     var index, chars, match, stack = [], last = html;
     stack.last = function () {
         return this[this.length - 1];
@@ -258,12 +265,12 @@ var HTMLParser = this.HTMLParser = function (html, handler) {
                 var value = arguments[2] ? arguments[2] :
                     arguments[3] ? arguments[3] :
                     arguments[4] ? arguments[4] :
-                    fillAttrs[name] ? name : "";
+                    fillAttrs[name] ? true : false;
 
                 attrs.push({
                     name: name,
                     value: value,
-                    escaped: value.replace(/(^|[^\\])"/g, '$1\\\"') //"
+                    // escaped: value.replace(/(^|[^\\])"/g, '$1\\\"') //"
                 });
             });
 
@@ -296,11 +303,4 @@ var HTMLParser = this.HTMLParser = function (html, handler) {
     }
 };
 
-function makeMap(str) {
-    var obj = {}, items = str.split(",");
-    for (var i = 0; i < items.length; i++)
-        obj[items[i]] = true;
-    return obj;
-}
-
-module.exports = HTMLParser
+export default HTMLParser

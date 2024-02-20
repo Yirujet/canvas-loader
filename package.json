@@ -1,8 +1,8 @@
 {
   "name": "canvas-loaders",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Parse the. canvas file into JavaScript",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
